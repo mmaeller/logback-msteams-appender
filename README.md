@@ -1,39 +1,29 @@
-This is a simple [Logback](http://logback.qos.ch/) appender which pushes logs to [Slack](https://slack.com/) channel.
+#Based on `logback-slack-appender` by [maricn](https://github.com/maricn/logback-slack-appender).
+
+This is a simple [Logback](http://logback.qos.ch/) appender which pushes logs to a [MsTeams](https://products.office.com/en-us/microsoft-teams/group-chat-software) channel.
 
 # How to setup
 
-Add dependency to com.github.maricn:logback-slack-appender:1.4.0 in your pom.xml.
+Add dependency to com.github.mmaeller:logback-msteams-appender:1.0.0 in your pom.xml.
 
-Add SlackAppender configuration to logback.xml file
+Add MsTeamsAppender configuration to logback.xml file
 
 ```
 	<?xml version="1.0" encoding="UTF-8" ?>
 	<configuration>
 		...
-		<appender name="SLACK" class="com.github.maricn.logback.SlackAppender">
-			<!-- Slack API token -->
-			<token>1111111111-1111111-11111111-111111111</token>
-			<!-- Slack incoming webhook uri. Uncomment the lines below to use incoming webhook uri instead of API token. -->
-			<!--
-			<webhookUri>https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX</webhookUri>
-			-->
-			<!-- Channel that you want to post - default is #general -->
-			<channel>#api-test</channel>
-			<!-- Formatting (you can use Slack formatting - URL links, code formatting, etc.) -->
-			<layout class="ch.qos.logback.classic.PatternLayout">
-				<pattern>%-4relative [%thread] %-5level %class - %msg%n</pattern>
-			</layout>
-			<!-- Username of the messages sender -->
-			<username>${HOSTNAME}</username>
-			<!-- Emoji to be used for messages -->
-			<iconEmoji>:stuck_out_tongue_winking_eye:</iconEmoji>
-			<!-- If color coding of log levels should be used -->
-			<colorCoding>true</colorCoding>
+		<appender name="MSTEAMS" class="com.github.mmaeller.logback.MsTeamsAppender">
+			<!-- MS Teams webhook URI. -->
+			<webHookUri>https://outlook.office.com/webhook/any-uuid/IncomingWebhook/any-other-uuid</webHookUri>
+		  <!-- Custom connection timeout (default 5 seconds) -->
+		  <connectionTimeout>1000</connectionTimeout>
+      <!-- Custom read timeout (default 10 seconds) -->
+		  <readTimeout>3000</readTimeout>
 		</appender>
 
-		<!-- Currently recommended way of using Slack appender -->
-		<appender name="ASYNC_SLACK" class="ch.qos.logback.classic.AsyncAppender">
-			<appender-ref ref="SLACK" />
+		<!-- Currently recommended way of using MS Teams appender -->
+		<appender name="ASYNC_MSTEAMS" class="ch.qos.logback.classic.AsyncAppender">
+			<appender-ref ref="MSTEAMS" />
 			<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
 				<level>ERROR</level>
 			</filter>
@@ -41,7 +31,7 @@ Add SlackAppender configuration to logback.xml file
 
 		<root>
 			<level value="ALL" />
-			<appender-ref ref="ASYNC_SLACK" />
+			<appender-ref ref="ASYNC_MSTEAMS" />
 		</root>
 
 	</configuration>
