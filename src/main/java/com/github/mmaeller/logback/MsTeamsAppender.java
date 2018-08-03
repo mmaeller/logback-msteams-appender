@@ -21,9 +21,9 @@ public class MsTeamsAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
   protected void append(final ILoggingEvent event) {
     try {
       if (webHookUri == null || webHookUri.isEmpty()) {
-        addError("No webHookUri available!");
+        addError("No webHook URI available!");
       } else {
-        sendLog(event);
+        postMessage(createMessage(event));
       }
     } catch (final Exception ex) {
       ex.printStackTrace();
@@ -31,17 +31,34 @@ public class MsTeamsAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     }
   }
 
-  private void sendLog(final ILoggingEvent event) throws IOException {
-
-    final MessageCard.Builder builder = MessageCard.builder();
-    builder.title(event.getLoggerName());
-    builder.text(event.getFormattedMessage());
-    builder.themeColor(colorByLevel(event.getLevel()));
-
-    postMessage(OBJECT_MAPPER.writeValueAsBytes(builder.build()));
+  /**
+   * Creates a {@link MessageCard} from the provided {@link ILoggingEvent}.
+   *
+   * @param event occurred {@link ILoggingEvent}
+   * @return {@link MessageCard} with data from the event
+   */
+  private MessageCard createMessage(final ILoggingEvent event) {
+    return MessageCard.builder()
+        .title(event.getLoggerName())
+        .text(event.getFormattedMessage())
+        .themeColor(getThemeColorByLevel(event.getLevel()))
+        .build();
   }
 
-  private String colorByLevel(final Level level) {
+  /**
+   * Determines predefined theme colors by the event's level.
+   *
+   * <ul>
+   *   <li>ERROR: ff1900
+   *   <li>WARN: ffff00
+   *   <li>INFO: 009911
+   *   <li>all other: ff00ff
+   * </ul>
+   *
+   * @param level event's level
+   * @return color code
+   */
+  private String getThemeColorByLevel(final Level level) {
     if (Level.ERROR.equals(level)) {
       return "ff1900";
     } else if (Level.WARN.equals(level)) {
@@ -52,7 +69,15 @@ public class MsTeamsAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     return "ff00ff";
   }
 
-  private void postMessage(final byte[] messageBytes) throws IOException {
+  /**
+   * Posts the {@link MessageCard} to the configured webhook URI.
+   *
+   * @param messageCard the data that shall be send
+   * @throws IOException when the connection couldn't be established, the message couldn't be
+   *     converted nor sent.
+   */
+  private void postMessage(final MessageCard messageCard) throws IOException {
+    final byte[] messageBytes = OBJECT_MAPPER.writeValueAsBytes(messageCard);
     final HttpURLConnection conn = (HttpURLConnection) new URL(webHookUri).openConnection();
     conn.setConnectTimeout(connectionTimeout);
     conn.setReadTimeout(readTimeout);
